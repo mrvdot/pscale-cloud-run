@@ -15,14 +15,67 @@ const connection = mysql.createConnection(DB_CONNECTION_STRING);
 
 connection.connect()
 
-app.get('/', (req, res) => {
-  connection.query('SELECT * FROM users', function (err, rows, fields) {
+const ALLOWED_TABLES = process.env.ALLOWED_TABLES.split('|');
+
+if (!ALLOWED_TABLES?.length) {
+  console.warn(
+    `[WARNING][SECURITY RISK]
+    You have not configured ALLOWED_TABLES, which means all tables
+    are fully readable through this service. It is highly recommended
+    that you limit access before publishing to production!!`
+  );
+}
+
+app.get('/:table', (req, res) => {
+  const filters = (req.query?.filters || '').split('|');
+  const params = (req.query?.params || '').split('|');
+  if (filters.length !== params.length) {
+    res
+      .statusCode(400)
+      .json({
+        code: 400,
+        error: 'Invalid Query',
+        message: `Query must have same number of filters and params`
+      })
+    return
+  }
+
+  let query = `SELECT * FROM ${table}`;
+  if (filters.length) {
+    query += ` WHERE ${filters.join(' AND ')}`
+  }
+  connection.execute(query, params, function (err, rows, fields) {
     if (err) throw err
 
-    res.send(rows)
+    res.json(rows)
+  })
+})
+
+app.post('/:table', (req, res) => {
+  const filters = (req.body?.filters || '').split('|');
+  const params = (req.body?.params || '').split('|');
+  if (filters.length !== params.length) {
+    res
+      .statusCode(400)
+      .json({
+        code: 400,
+        error: 'Invalid Query',
+        message: `Query must have same number of filters and params`
+      })
+    return
+  }
+
+  let query = `SELECT * FROM ${table}`;
+  if (filters.length) {
+    query += ` WHERE ${filters.join(' AND ')}`
+  }
+  connection.execute(query, params, function (err, rows, fields) {
+    if (err) throw err
+
+    res.json(rows)
   })
 })
 
 app.listen(port, () => {
-  console.log(`Example app listening at http://localhost:${port}`)
+  console.log(`PSCALE Read Access listening at http://localhost:${port}`)
 })
