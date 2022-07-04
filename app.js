@@ -8,7 +8,7 @@ const PASSWORD = process.env.DB_PASS;
 const USER = process.env.DB_USER;
 const NAME = process.env.DB_NAME;
 
-const DB_CONNECTION_STRING = `DATABASE_URL=mysql://${USER}:${PASSWORD}@${HOST}/${NAME}?ssl={"rejectUnauthorized":true}`
+const DB_CONNECTION_STRING = `mysql://${USER}:${PASSWORD}@${HOST}/${NAME}?ssl={"rejectUnauthorized":true}`
 
 const mysql = require('mysql2')
 const connection = mysql.createConnection(DB_CONNECTION_STRING);
